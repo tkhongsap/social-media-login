@@ -15,11 +15,13 @@ export default function Login() {
     // Check for auth result in URL params
     const urlParams = new URLSearchParams(window.location.search);
     const authResult = urlParams.get('auth');
+    const reason = urlParams.get('reason');
     
     if (authResult === 'success') {
       setLocation('/landing');
     } else if (authResult === 'error') {
-      setError('Authentication failed. Please try again.');
+      const errorMsg = reason ? `Authentication failed: ${decodeURIComponent(reason)}` : 'Authentication failed. Please try again.';
+      setError(errorMsg);
       // Clean up URL
       window.history.replaceState({}, '', '/');
     }

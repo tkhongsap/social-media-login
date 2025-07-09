@@ -36,14 +36,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const callbackUrl = `${req.protocol}://${BASE_URL}/api/auth/line/callback`;
     const lineAuthUrl = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CHANNEL_ID}&redirect_uri=${encodeURIComponent(callbackUrl)}&state=${state}&scope=profile`;
     
+    console.log('Generated LINE auth URL:', lineAuthUrl);
+    console.log('Using Channel ID:', LINE_CHANNEL_ID);
+    console.log('Using Callback URL:', callbackUrl);
+    
     res.json({ authUrl: lineAuthUrl });
   });
 
   // Line OAuth callback endpoint
   app.get("/api/auth/line/callback", async (req, res) => {
-    const { code, state } = req.query;
+    const { code, state, error, error_description } = req.query;
+    
+    console.log('LINE callback received:', { code, state, error, error_description });
+    console.log('Session state:', req.session.state);
+    
+    if (error) {
+      console.error('LINE OAuth error:', error, error_description);
+      const errorMsg = typeof error_description === 'string' ? error_description : String(error_description);
+      const errorCode = typeof error === 'string' ? error : String(error);
+      return res.redirect(`${req.protocol}://${BASE_URL}/?auth=error&reason=${encodeURIComponent(errorMsg || errorCode || 'Unknown error')}`);
+    }
     
     if (!code || !state || state !== req.session.state) {
+      console.error('Invalid auth params:', { code: !!code, state: !!state, stateMatch: state === req.session.state });
       return res.status(400).json({ error: "Invalid authorization code or state" });
     }
 
