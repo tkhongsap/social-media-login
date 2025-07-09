@@ -14,7 +14,28 @@ declare module 'express-session' {
 
 const LINE_CHANNEL_ID = process.env.LINE_CHANNEL_ID || process.env.NEXT_PUBLIC_LINE_CHANNEL_ID || "2007715339";
 const LINE_CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET || "b460b2284525afa0b5708011399a53ae";
-const BASE_URL = process.env.REPLIT_DOMAINS?.split(',')[0] || "localhost:5000";
+
+// Determine the correct base URL and protocol based on environment
+function getBaseUrl(req: any): string {
+  // Check if we're in production (replit.app domain)
+  if (process.env.REPLIT_DOMAINS?.includes('.replit.app')) {
+    // Use the replit.app domain with HTTPS in production
+    const replitDomain = process.env.REPLIT_DOMAINS.split(',').find(domain => domain.includes('.replit.app'));
+    return replitDomain || 'localhost:5000';
+  }
+  
+  // For development, use the current domain from the request
+  return process.env.REPLIT_DOMAINS?.split(',')[0] || req.get('host') || "localhost:5000";
+}
+
+function getProtocol(req: any): string {
+  // Use HTTPS for replit.app domains
+  if (process.env.REPLIT_DOMAINS?.includes('.replit.app')) {
+    return 'https';
+  }
+  // Use the request protocol otherwise
+  return req.protocol || 'http';
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Session middleware
@@ -33,12 +54,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const state = crypto.randomBytes(32).toString('hex');
     req.session.state = state;
     
-    const callbackUrl = `${req.protocol}://${BASE_URL}/api/auth/line/callback`;
+    const protocol = getProtocol(req);
+    const baseUrl = getBaseUrl(req);
+    const callbackUrl = `${protocol}://${baseUrl}/api/auth/line/callback`;
     const lineAuthUrl = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CHANNEL_ID}&redirect_uri=${encodeURIComponent(callbackUrl)}&state=${state}&scope=profile`;
     
     console.log('Generated LINE auth URL:', lineAuthUrl);
     console.log('Using Channel ID:', LINE_CHANNEL_ID);
     console.log('Using Callback URL:', callbackUrl);
+    console.log('Environment:', process.env.REPLIT_DOMAINS ? 'Production' : 'Development');
     
     res.json({ authUrl: lineAuthUrl });
   });
@@ -54,7 +78,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('LINE OAuth error:', error, error_description);
       const errorMsg = typeof error_description === 'string' ? error_description : String(error_description);
       const errorCode = typeof error === 'string' ? error : String(error);
-      return res.redirect(`${req.protocol}://${BASE_URL}/?auth=error&reason=${encodeURIComponent(errorMsg || errorCode || 'Unknown error')}`);
+      const protocol = getProtocol(req);
+      const baseUrl = getBaseUrl(req);
+      return res.redirect(`${protocol}://${baseUrl}/?auth=error&reason=${encodeURIComponent(errorMsg || errorCode || 'Unknown error')}`);
     }
     
     if (!code || !state || state !== req.session.state) {
@@ -63,7 +89,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const callbackUrl = `${req.protocol}://${BASE_URL}/api/auth/line/callback`;
+      const protocol = getProtocol(req);
+      const baseUrl = getBaseUrl(req);
+      const callbackUrl = `${protocol}://${baseUrl}/api/auth/line/callback`;
       
       // Exchange code for access token
       const tokenResponse = await fetch("https://api.line.me/oauth2/v2.1/token", {
@@ -118,10 +146,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       req.session.lineSessionId = sessionId;
       
       // Redirect to frontend with success
-      res.redirect(`${req.protocol}://${BASE_URL}/?auth=success`);
+      const protocol = getProtocol(req);
+      const baseUrl = getBaseUrl(req);
+      res.redirect(`${protocol}://${baseUrl}/?auth=success`);
     } catch (error) {
       console.error("Line OAuth error:", error);
-      res.redirect(`${req.protocol}://${BASE_URL}/?auth=error`);
+      const protocol = getProtocol(req);
+      const baseUrl = getBaseUrl(req);
+      res.redirect(`${protocol}://${baseUrl}/?auth=error`);
     }
   });
 
