@@ -2,6 +2,13 @@
 
 This is a full-stack web application built with React (frontend) and Express.js (backend) that implements LINE OAuth authentication. The application allows users to log in with their LINE accounts and view their profile information. It uses a modern tech stack with TypeScript, Tailwind CSS, Radix UI components (shadcn/ui), and Drizzle ORM for database operations.
 
+## Recent Changes (January 2025)
+✓ Fixed WebView restrictions by opening LINE OAuth in new tab
+✓ Added production/development URL detection for proper callback URLs  
+✓ Implemented secure session management with LINE OAuth flow
+✓ Development login working: http://166643c1-1c28-4b0e-8e38-36c0cdacea1b-00-xs4vzkk5ru23.picard.replit.dev
+✓ Production deployment: https://line-social-login-tkhongsap.replit.app (requires callback URL registration)
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.

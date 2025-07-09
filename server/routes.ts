@@ -17,20 +17,28 @@ const LINE_CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET || "b460b2284525afa0
 
 // Determine the correct base URL and protocol based on environment
 function getBaseUrl(req: any): string {
-  // Check if we're in production (replit.app domain)
+  // First, check if the request host includes .replit.app (for deployed apps)
+  const host = req.get('host');
+  if (host?.includes('.replit.app')) {
+    return host;
+  }
+  
+  // Check if we're in production (replit.app domain in env)
   if (process.env.REPLIT_DOMAINS?.includes('.replit.app')) {
     // Use the replit.app domain with HTTPS in production
     const replitDomain = process.env.REPLIT_DOMAINS.split(',').find(domain => domain.includes('.replit.app'));
     return replitDomain || 'localhost:5000';
   }
   
-  // For development, use the current domain from the request
-  return process.env.REPLIT_DOMAINS?.split(',')[0] || req.get('host') || "localhost:5000";
+  // For development, use the current domain from the request or env
+  return process.env.REPLIT_DOMAINS?.split(',')[0] || host || "localhost:5000";
 }
 
 function getProtocol(req: any): string {
-  // Use HTTPS for replit.app domains
-  if (process.env.REPLIT_DOMAINS?.includes('.replit.app')) {
+  // Use HTTPS for replit.app domains or if forwarded headers indicate HTTPS
+  if (process.env.REPLIT_DOMAINS?.includes('.replit.app') || 
+      req.get('x-forwarded-proto') === 'https' ||
+      req.get('host')?.includes('.replit.app')) {
     return 'https';
   }
   // Use the request protocol otherwise
@@ -89,9 +97,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const protocol = getProtocol(req);
-      const baseUrl = getBaseUrl(req);
-      const callbackUrl = `${protocol}://${baseUrl}/api/auth/line/callback`;
+      const callbackProtocol = getProtocol(req);
+      const callbackBaseUrl = getBaseUrl(req);
+      const callbackUrl = `${callbackProtocol}://${callbackBaseUrl}/api/auth/line/callback`;
       
       // Exchange code for access token
       const tokenResponse = await fetch("https://api.line.me/oauth2/v2.1/token", {
@@ -146,14 +154,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       req.session.lineSessionId = sessionId;
       
       // Redirect to frontend with success
-      const protocol = getProtocol(req);
-      const baseUrl = getBaseUrl(req);
-      res.redirect(`${protocol}://${baseUrl}/?auth=success`);
+      const redirectProtocol = getProtocol(req);
+      const redirectBaseUrl = getBaseUrl(req);
+      res.redirect(`${redirectProtocol}://${redirectBaseUrl}/?auth=success`);
     } catch (error) {
       console.error("Line OAuth error:", error);
-      const protocol = getProtocol(req);
-      const baseUrl = getBaseUrl(req);
-      res.redirect(`${protocol}://${baseUrl}/?auth=error`);
+      const errorProtocol = getProtocol(req);
+      const errorBaseUrl = getBaseUrl(req);
+      res.redirect(`${errorProtocol}://${errorBaseUrl}/?auth=error`);
     }
   });
 
