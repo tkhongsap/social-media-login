@@ -4,6 +4,14 @@ import { storage } from "./storage";
 import session from "express-session";
 import crypto from "crypto";
 
+// Extend session data interface
+declare module 'express-session' {
+  interface SessionData {
+    state?: string;
+    lineSessionId?: string;
+  }
+}
+
 const LINE_CHANNEL_ID = process.env.LINE_CHANNEL_ID || process.env.NEXT_PUBLIC_LINE_CHANNEL_ID || "2007715339";
 const LINE_CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET || "b460b2284525afa0b5708011399a53ae";
 const BASE_URL = process.env.REPLIT_DOMAINS?.split(',')[0] || "localhost:5000";

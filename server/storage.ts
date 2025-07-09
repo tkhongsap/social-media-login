@@ -48,6 +48,8 @@ export class MemStorage implements IStorage {
       ...insertSession, 
       id,
       createdAt: new Date(),
+      statusMessage: insertSession.statusMessage || null,
+      pictureUrl: insertSession.pictureUrl || null,
     };
     this.lineSessions.set(session.sessionId, session);
     return session;
