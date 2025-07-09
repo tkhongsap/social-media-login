@@ -3,13 +3,14 @@ import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, ExternalLink } from "lucide-react";
 import { SiLine } from "react-icons/si";
 
 export default function Login() {
   const [, setLocation] = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showNewTabMessage, setShowNewTabMessage] = useState(false);
 
   useEffect(() => {
     // Check for auth result in URL params
@@ -38,7 +39,31 @@ export default function Login() {
       }
       
       const data = await response.json();
-      window.location.href = data.authUrl;
+      
+      // Open in new tab to avoid WebView restrictions
+      const newWindow = window.open(data.authUrl, '_blank');
+      
+      if (!newWindow) {
+        // Fallback if popup blocked
+        window.location.href = data.authUrl;
+      } else {
+        // Show message about new tab
+        setShowNewTabMessage(true);
+        
+        // Monitor the new window for closure
+        const checkClosed = setInterval(() => {
+          if (newWindow.closed) {
+            clearInterval(checkClosed);
+            setIsLoading(false);
+            setShowNewTabMessage(false);
+            // Refresh the page to check auth status
+            window.location.reload();
+          }
+        }, 1000);
+        
+        // Stop loading state after opening new window
+        setIsLoading(false);
+      }
     } catch (err) {
       setError('Failed to start authentication process');
       setIsLoading(false);
@@ -64,6 +89,15 @@ export default function Login() {
                 <AlertCircle className="h-4 w-4 text-red-400" />
                 <AlertDescription className="text-red-700 font-medium">
                   {error}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {showNewTabMessage && (
+              <Alert className="mb-6 border-blue-400 bg-blue-50">
+                <ExternalLink className="h-4 w-4 text-blue-400" />
+                <AlertDescription className="text-blue-700 font-medium">
+                  A new tab has opened for Line authentication. Please complete the login process and close the tab when finished.
                 </AlertDescription>
               </Alert>
             )}
