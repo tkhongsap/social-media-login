@@ -7,14 +7,16 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCircle, User, Clock, Settings, RefreshCw, LogOut } from "lucide-react";
-import { SiLine } from "react-icons/si";
+import { SiLine, SiGoogle } from "react-icons/si";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 interface UserProfile {
+  provider: 'line' | 'google';
   userId: string;
   displayName: string;
-  statusMessage: string;
+  email?: string; // Only for Google
+  statusMessage: string | null;
   pictureUrl: string;
   loginTime: string;
 }
@@ -36,7 +38,7 @@ export default function Landing() {
       setLocation('/');
       toast({
         title: "Logged out successfully",
-        description: "You have been logged out of your Line account.",
+        description: "You have been logged out successfully.",
       });
     },
     onError: () => {
@@ -73,10 +75,13 @@ export default function Landing() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-line-green rounded-lg flex items-center justify-center">
-                  <SiLine className="text-white text-lg" />
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                  <div className="flex space-x-1">
+                    <SiLine className="text-white text-xs" />
+                    <SiGoogle className="text-white text-xs" />
+                  </div>
                 </div>
-                <span className="text-xl font-bold text-slate-900">Line Demo</span>
+                <span className="text-xl font-bold text-slate-900">Social Login Demo</span>
               </div>
               <Skeleton className="h-10 w-24" />
             </div>
@@ -114,22 +119,37 @@ export default function Landing() {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-line-green rounded-lg flex items-center justify-center">
-                <SiLine className="text-white text-lg" />
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                profile.provider === 'line' ? 'bg-line-green' : 'bg-blue-600'
+              }`}>
+                {profile.provider === 'line' ? (
+                  <SiLine className="text-white text-lg" />
+                ) : (
+                  <SiGoogle className="text-white text-lg" />
+                )}
               </div>
-              <span className="text-xl font-bold text-slate-900">Line Demo</span>
+              <span className="text-xl font-bold text-slate-900">
+                {profile.provider === 'line' ? 'Line' : 'Google'} Demo
+              </span>
             </div>
 
             {/* User Menu */}
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <Avatar className="w-10 h-10 border-2 border-line-green">
+                <Avatar className={`w-10 h-10 border-2 ${
+                  profile.provider === 'line' ? 'border-line-green' : 'border-blue-600'
+                }`}>
                   <AvatarImage src={profile.pictureUrl} alt={profile.displayName} />
                   <AvatarFallback>{profile.displayName.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="hidden sm:block">
                   <p className="text-sm font-medium text-slate-900">{profile.displayName}</p>
-                  <p className="text-xs text-slate-500">{profile.statusMessage || "Line User"}</p>
+                  <p className="text-xs text-slate-500">
+                    {profile.provider === 'google' && profile.email ? 
+                      profile.email : 
+                      (profile.statusMessage || `${profile.provider} User`)
+                    }
+                  </p>
                 </div>
               </div>
               
@@ -152,12 +172,19 @@ export default function Landing() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Welcome Section */}
         <div className="text-center mb-12">
-          <div className="w-20 h-20 bg-line-green-light rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="text-line-green text-3xl" />
+          <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${
+            profile.provider === 'line' ? 'bg-line-green-light' : 'bg-blue-100'
+          }`}>
+            <CheckCircle className={`text-3xl ${
+              profile.provider === 'line' ? 'text-line-green' : 'text-blue-600'
+            }`} />
           </div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">Welcome to Line Demo!</h1>
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">
+            Welcome to {profile.provider === 'line' ? 'Line' : 'Google'} Demo!
+          </h1>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            You have successfully authenticated with Line. Here's your profile information and available features.
+            You have successfully authenticated with {profile.provider === 'line' ? 'Line' : 'Google'}. 
+            Here's your profile information and available features.
           </p>
         </div>
 
@@ -167,8 +194,12 @@ export default function Landing() {
           <Card className="hover:shadow-xl transition-shadow duration-200">
             <CardContent className="p-6">
               <div className="flex items-center space-x-4 mb-4">
-                <div className="w-12 h-12 bg-line-green-light rounded-lg flex items-center justify-center">
-                  <User className="text-line-green text-xl" />
+                <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                  profile.provider === 'line' ? 'bg-line-green-light' : 'bg-blue-100'
+                }`}>
+                  <User className={`text-xl ${
+                    profile.provider === 'line' ? 'text-line-green' : 'text-blue-600'
+                  }`} />
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900">Profile Information</h3>
               </div>
@@ -181,9 +212,24 @@ export default function Landing() {
                   <span className="text-slate-500">User ID:</span>
                   <span className="font-medium text-slate-900 font-mono text-xs">{profile.userId}</span>
                 </div>
+                {profile.provider === 'google' && profile.email && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Email:</span>
+                    <span className="font-medium text-slate-900">{profile.email}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Status:</span>
-                  <span className="font-medium text-line-green">{profile.statusMessage || "Active User"}</span>
+                  <span className="text-slate-500">
+                    {profile.provider === 'line' ? 'Status:' : 'Provider:'}
+                  </span>
+                  <span className={`font-medium ${
+                    profile.provider === 'line' ? 'text-line-green' : 'text-blue-600'
+                  }`}>
+                    {profile.provider === 'line' ? 
+                      (profile.statusMessage || "Active User") : 
+                      'Google Account'
+                    }
+                  </span>
                 </div>
               </div>
             </CardContent>

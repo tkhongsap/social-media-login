@@ -9,11 +9,15 @@ declare module 'express-session' {
   interface SessionData {
     state?: string;
     lineSessionId?: string;
+    googleSessionId?: string;
   }
 }
 
 const LINE_CHANNEL_ID = process.env.LINE_CHANNEL_ID || process.env.NEXT_PUBLIC_LINE_CHANNEL_ID || "2007715339";
 const LINE_CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET || "b460b2284525afa0b5708011399a53ae";
+
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
 // Determine the correct base URL and protocol based on environment
 function getBaseUrl(req: any): string {
@@ -165,34 +169,178 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Google OAuth login endpoint
+  app.get("/api/auth/google", (req, res) => {
+    if (!GOOGLE_CLIENT_ID) {
+      return res.status(500).json({ error: "Google OAuth not configured" });
+    }
+
+    const state = crypto.randomBytes(32).toString('hex');
+    req.session.state = state;
+    
+    const protocol = getProtocol(req);
+    const baseUrl = getBaseUrl(req);
+    const callbackUrl = `${protocol}://${baseUrl}/api/auth/google/callback`;
+    const scopes = 'openid email profile';
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(callbackUrl)}&scope=${encodeURIComponent(scopes)}&state=${state}`;
+    
+    console.log('Generated Google auth URL:', googleAuthUrl);
+    console.log('Using Client ID:', GOOGLE_CLIENT_ID);
+    console.log('Using Callback URL:', callbackUrl);
+    
+    res.json({ authUrl: googleAuthUrl });
+  });
+
+  // Google OAuth callback endpoint
+  app.get("/api/auth/google/callback", async (req, res) => {
+    const { code, state, error, error_description } = req.query;
+    
+    console.log('Google callback received:', { code, state, error, error_description });
+    console.log('Session state:', req.session.state);
+    
+    if (error) {
+      console.error('Google OAuth error:', error, error_description);
+      const errorMsg = typeof error_description === 'string' ? error_description : String(error_description);
+      const errorCode = typeof error === 'string' ? error : String(error);
+      const protocol = getProtocol(req);
+      const baseUrl = getBaseUrl(req);
+      return res.redirect(`${protocol}://${baseUrl}/?auth=error&reason=${encodeURIComponent(errorMsg || errorCode || 'Unknown error')}`);
+    }
+    
+    if (!code || !state || state !== req.session.state) {
+      console.error('Invalid auth params:', { code: !!code, state: !!state, stateMatch: state === req.session.state });
+      return res.status(400).json({ error: "Invalid authorization code or state" });
+    }
+
+    try {
+      const callbackProtocol = getProtocol(req);
+      const callbackBaseUrl = getBaseUrl(req);
+      const callbackUrl = `${callbackProtocol}://${callbackBaseUrl}/api/auth/google/callback`;
+      
+      // Exchange code for access token
+      const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          grant_type: "authorization_code",
+          code: code as string,
+          redirect_uri: callbackUrl,
+          client_id: GOOGLE_CLIENT_ID!,
+          client_secret: GOOGLE_CLIENT_SECRET!,
+        }),
+      });
+
+      if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text();
+        console.error('Token exchange error:', errorText);
+        throw new Error("Failed to exchange code for token");
+      }
+
+      const tokenData = await tokenResponse.json();
+      const accessToken = tokenData.access_token;
+      const refreshToken = tokenData.refresh_token;
+
+      // Get user profile
+      const profileResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!profileResponse.ok) {
+        throw new Error("Failed to fetch user profile");
+      }
+
+      const profile = await profileResponse.json();
+
+      // Create session
+      const sessionId = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 1); // 24 hours from now
+
+      const googleSession = await storage.createGoogleSession({
+        userId: profile.id,
+        email: profile.email,
+        name: profile.name,
+        pictureUrl: profile.picture || "",
+        accessToken,
+        refreshToken: refreshToken || "",
+        sessionId,
+        expiresAt,
+      });
+
+      req.session.googleSessionId = sessionId;
+      
+      // Redirect to frontend with success
+      const redirectProtocol = getProtocol(req);
+      const redirectBaseUrl = getBaseUrl(req);
+      res.redirect(`${redirectProtocol}://${redirectBaseUrl}/?auth=success`);
+    } catch (error) {
+      console.error("Google OAuth error:", error);
+      const errorProtocol = getProtocol(req);
+      const errorBaseUrl = getBaseUrl(req);
+      res.redirect(`${errorProtocol}://${errorBaseUrl}/?auth=error`);
+    }
+  });
+
   // Get current user session
   app.get("/api/auth/me", async (req, res) => {
-    const sessionId = req.session.lineSessionId;
-    if (!sessionId) {
-      return res.status(401).json({ error: "Not authenticated" });
+    const lineSessionId = req.session.lineSessionId;
+    const googleSessionId = req.session.googleSessionId;
+
+    // Check Line session first
+    if (lineSessionId) {
+      const lineSession = await storage.getLineSession(lineSessionId);
+      if (lineSession) {
+        return res.json({
+          provider: 'line',
+          userId: lineSession.userId,
+          displayName: lineSession.displayName,
+          statusMessage: lineSession.statusMessage,
+          pictureUrl: lineSession.pictureUrl,
+          loginTime: lineSession.createdAt,
+        });
+      }
     }
 
-    const lineSession = await storage.getLineSession(sessionId);
-    if (!lineSession) {
-      return res.status(401).json({ error: "Session expired" });
+    // Check Google session
+    if (googleSessionId) {
+      const googleSession = await storage.getGoogleSession(googleSessionId);
+      if (googleSession) {
+        return res.json({
+          provider: 'google',
+          userId: googleSession.userId,
+          displayName: googleSession.name,
+          email: googleSession.email,
+          statusMessage: null, // Google doesn't have status messages
+          pictureUrl: googleSession.pictureUrl,
+          loginTime: googleSession.createdAt,
+        });
+      }
     }
 
-    res.json({
-      userId: lineSession.userId,
-      displayName: lineSession.displayName,
-      statusMessage: lineSession.statusMessage,
-      pictureUrl: lineSession.pictureUrl,
-      loginTime: lineSession.createdAt,
-    });
+    return res.status(401).json({ error: "Not authenticated" });
   });
 
   // Logout endpoint
   app.post("/api/auth/logout", async (req, res) => {
-    const sessionId = req.session.lineSessionId;
-    if (sessionId) {
-      await storage.deleteLineSession(sessionId);
-      req.session.destroy(() => {});
+    const lineSessionId = req.session.lineSessionId;
+    const googleSessionId = req.session.googleSessionId;
+    
+    // Delete Line session if exists
+    if (lineSessionId) {
+      await storage.deleteLineSession(lineSessionId);
     }
+    
+    // Delete Google session if exists
+    if (googleSessionId) {
+      await storage.deleteGoogleSession(googleSessionId);
+    }
+    
+    // Destroy the session
+    req.session.destroy(() => {});
     res.json({ success: true });
   });
 
