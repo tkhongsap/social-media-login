@@ -29,13 +29,13 @@
   --line-green-dark: hsl(120, 100%, 32%);
   --line-green-light: hsl(120, 43%, 91%);
   
-  /* Google brand colors */
-  --google-blue: hsl(217, 89%, 61%);
-  --google-blue-dark: hsl(217, 89%, 55%);
-  --google-blue-light: hsl(217, 89%, 95%);
-  --google-red: hsl(10, 84%, 55%);
-  --google-yellow: hsl(46, 96%, 51%);
-  --google-green: hsl(143, 60%, 49%);
+  /* Google official brand colors */
+  --google-blue: #4285F4;
+  --google-blue-dark: #3367d6;
+  --google-blue-light: #e8f0fe;
+  --google-red: #DB4437;
+  --google-yellow: #F4B400;
+  --google-green: #0F9D58;
   
   /* Facebook brand colors */
   --facebook-blue: hsl(221, 44%, 41%);
