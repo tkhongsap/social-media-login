@@ -10,6 +10,7 @@ declare module 'express-session' {
     state?: string;
     lineSessionId?: string;
     googleSessionId?: string;
+    facebookSessionId?: string;
   }
 }
 
@@ -18,6 +19,9 @@ const LINE_CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET || "b460b2284525afa0
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+
+const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
+const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
 
 // Determine the correct base URL and protocol based on environment
 function getBaseUrl(req: any): string {
@@ -285,10 +289,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Facebook OAuth login endpoint
+  app.get("/api/auth/facebook", (req, res) => {
+    if (!FACEBOOK_APP_ID) {
+      return res.status(500).json({ error: "Facebook OAuth not configured" });
+    }
+
+    const state = crypto.randomBytes(32).toString('hex');
+    req.session.state = state;
+    
+    const protocol = getProtocol(req);
+    const baseUrl = getBaseUrl(req);
+    const callbackUrl = `${protocol}://${baseUrl}/api/auth/facebook/callback`;
+    const scopes = 'email,public_profile';
+    const facebookAuthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${encodeURIComponent(callbackUrl)}&scope=${encodeURIComponent(scopes)}&state=${state}&response_type=code`;
+    
+    console.log('Generated Facebook auth URL:', facebookAuthUrl);
+    console.log('Using App ID:', FACEBOOK_APP_ID);
+    console.log('Using Callback URL:', callbackUrl);
+    
+    res.json({ authUrl: facebookAuthUrl });
+  });
+
+  // Facebook OAuth callback endpoint
+  app.get("/api/auth/facebook/callback", async (req, res) => {
+    const { code, state, error, error_description } = req.query;
+    
+    console.log('Facebook callback received:', { code, state, error, error_description });
+    console.log('Session state:', req.session.state);
+    
+    if (error) {
+      console.error('Facebook OAuth error:', error, error_description);
+      const errorMsg = typeof error_description === 'string' ? error_description : String(error_description);
+      const errorCode = typeof error === 'string' ? error : String(error);
+      const protocol = getProtocol(req);
+      const baseUrl = getBaseUrl(req);
+      return res.redirect(`${protocol}://${baseUrl}/?auth=error&reason=${encodeURIComponent(errorMsg || errorCode || 'Unknown error')}`);
+    }
+    
+    if (!code || !state || state !== req.session.state) {
+      console.error('Invalid auth params:', { code: !!code, state: !!state, stateMatch: state === req.session.state });
+      return res.status(400).json({ error: "Invalid authorization code or state" });
+    }
+
+    try {
+      const callbackProtocol = getProtocol(req);
+      const callbackBaseUrl = getBaseUrl(req);
+      const callbackUrl = `${callbackProtocol}://${callbackBaseUrl}/api/auth/facebook/callback`;
+      
+      // Exchange code for access token
+      const tokenResponse = await fetch("https://graph.facebook.com/v18.0/oauth/access_token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          client_id: FACEBOOK_APP_ID!,
+          client_secret: FACEBOOK_APP_SECRET!,
+          redirect_uri: callbackUrl,
+          code: code as string,
+        }),
+      });
+
+      if (!tokenResponse.ok) {
+        throw new Error("Failed to exchange code for token");
+      }
+
+      const tokenData = await tokenResponse.json();
+      const accessToken = tokenData.access_token;
+
+      // Get user profile
+      const profileResponse = await fetch(`https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${accessToken}`);
+
+      if (!profileResponse.ok) {
+        throw new Error("Failed to fetch user profile");
+      }
+
+      const profile = await profileResponse.json();
+
+      // Create session
+      const sessionId = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 1); // 24 hours from now
+
+      const facebookSession = await storage.createFacebookSession({
+        userId: profile.id,
+        email: profile.email || null,
+        name: profile.name,
+        pictureUrl: profile.picture?.data?.url || "",
+        accessToken,
+        sessionId,
+        expiresAt,
+      });
+
+      req.session.facebookSessionId = sessionId;
+      
+      // Redirect to frontend with success
+      const redirectProtocol = getProtocol(req);
+      const redirectBaseUrl = getBaseUrl(req);
+      res.redirect(`${redirectProtocol}://${redirectBaseUrl}/?auth=success`);
+    } catch (error) {
+      console.error("Facebook OAuth error:", error);
+      const errorProtocol = getProtocol(req);
+      const errorBaseUrl = getBaseUrl(req);
+      res.redirect(`${errorProtocol}://${errorBaseUrl}/?auth=error`);
+    }
+  });
+
   // Get current user session
   app.get("/api/auth/me", async (req, res) => {
     const lineSessionId = req.session.lineSessionId;
     const googleSessionId = req.session.googleSessionId;
+    const facebookSessionId = req.session.facebookSessionId;
 
     // Check Line session first
     if (lineSessionId) {
@@ -321,6 +433,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
 
+    // Check Facebook session
+    if (facebookSessionId) {
+      const facebookSession = await storage.getFacebookSession(facebookSessionId);
+      if (facebookSession) {
+        return res.json({
+          provider: 'facebook',
+          userId: facebookSession.userId,
+          displayName: facebookSession.name,
+          email: facebookSession.email,
+          statusMessage: null, // Facebook doesn't have status messages
+          pictureUrl: facebookSession.pictureUrl,
+          loginTime: facebookSession.createdAt,
+        });
+      }
+    }
+
     return res.status(401).json({ error: "Not authenticated" });
   });
 
@@ -328,6 +456,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/logout", async (req, res) => {
     const lineSessionId = req.session.lineSessionId;
     const googleSessionId = req.session.googleSessionId;
+    const facebookSessionId = req.session.facebookSessionId;
     
     // Delete Line session if exists
     if (lineSessionId) {
@@ -337,6 +466,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Delete Google session if exists
     if (googleSessionId) {
       await storage.deleteGoogleSession(googleSessionId);
+    }
+    
+    // Delete Facebook session if exists
+    if (facebookSessionId) {
+      await storage.deleteFacebookSession(facebookSessionId);
     }
     
     // Destroy the session

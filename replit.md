@@ -1,14 +1,15 @@
 # Overview
 
-This is a full-stack web application built with React (frontend) and Express.js (backend) that implements multiple social media OAuth authentication (Line and Google). The application allows users to log in with their preferred social account and view their profile information. It uses a modern tech stack with TypeScript, Tailwind CSS, Radix UI components (shadcn/ui), and Drizzle ORM for database operations.
+This is a full-stack web application built with React (frontend) and Express.js (backend) that implements multiple social media OAuth authentication (Line, Google, and Facebook). The application allows users to log in with their preferred social account and view their profile information. It uses a modern tech stack with TypeScript, Tailwind CSS, Radix UI components (shadcn/ui), and Drizzle ORM for database operations.
 
 ## Recent Changes (January 2025)
 ✓ Fixed WebView restrictions by opening LINE OAuth in new tab
 ✓ Added production/development URL detection for proper callback URLs  
 ✓ Implemented secure session management with LINE OAuth flow
 ✓ Added Google OAuth integration alongside Line login
-✓ Created unified social media authentication system supporting both Line and Google
-✓ Updated UI to dynamically handle both authentication providers
+✓ Added Facebook OAuth integration as the third authentication provider
+✓ Created unified social media authentication system supporting Line, Google, and Facebook
+✓ Updated UI to dynamically handle all three authentication providers
 ✓ Development login working: http://166643c1-1c28-4b0e-8e38-36c0cdacea1b-00-xs4vzkk5ru23.picard.replit.dev
 ✓ Production deployment: https://line-social-login-tkhongsap.replit.app (requires callback URL registration)
 
@@ -36,14 +37,17 @@ Preferred communication style: Simple, everyday language.
 ## Key Components
 
 ### Authentication Flow
-- LINE OAuth 2.0 implementation with proper state management
+- Multi-provider OAuth 2.0 implementation (Line, Google, Facebook) with proper state management
 - Session-based authentication using express-session
-- Secure token exchange and profile retrieval from LINE API
+- Secure token exchange and profile retrieval from provider APIs
 - Protected routes with authentication middleware
+- Unified authentication endpoints supporting all three providers
 
 ### Database Schema
 - **Users table**: Basic user information (id, username, password)
 - **Line sessions table**: LINE OAuth session data including access tokens, user profiles, and session metadata
+- **Google sessions table**: Google OAuth session data including access tokens, refresh tokens, and user profiles
+- **Facebook sessions table**: Facebook OAuth session data including access tokens and user profiles
 - PostgreSQL with Drizzle ORM for type-safe database operations
 
 ### UI Components
@@ -75,10 +79,10 @@ Preferred communication style: Simple, everyday language.
 
 ## External Dependencies
 
-### LINE Integration
-- LINE Channel ID and Channel Secret for OAuth
-- LINE Login API for user authentication
-- LINE Profile API for user data retrieval
+### Social Media Integration
+- **LINE**: Channel ID and Channel Secret for OAuth, Login API, Profile API
+- **Google**: Client ID and Client Secret for OAuth, Google People API
+- **Facebook**: App ID and App Secret for OAuth, Facebook Graph API
 
 ### Database
 - Neon Database (PostgreSQL) for production

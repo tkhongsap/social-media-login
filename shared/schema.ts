@@ -33,6 +33,18 @@ export const googleSessions = pgTable("google_sessions", {
   expiresAt: timestamp("expires_at").notNull(),
 });
 
+export const facebookSessions = pgTable("facebook_sessions", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  email: text("email"),
+  name: text("name").notNull(),
+  pictureUrl: text("picture_url"),
+  accessToken: text("access_token").notNull(),
+  sessionId: text("session_id").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -48,9 +60,16 @@ export const insertGoogleSessionSchema = createInsertSchema(googleSessions).omit
   createdAt: true,
 });
 
+export const insertFacebookSessionSchema = createInsertSchema(facebookSessions).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type LineSession = typeof lineSessions.$inferSelect;
 export type InsertLineSession = z.infer<typeof insertLineSessionSchema>;
 export type GoogleSession = typeof googleSessions.$inferSelect;
 export type InsertGoogleSession = z.infer<typeof insertGoogleSessionSchema>;
+export type FacebookSession = typeof facebookSessions.$inferSelect;
+export type InsertFacebookSession = z.infer<typeof insertFacebookSessionSchema>;

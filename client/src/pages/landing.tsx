@@ -7,15 +7,15 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCircle, User, Clock, Settings, RefreshCw, LogOut } from "lucide-react";
-import { SiLine, SiGoogle } from "react-icons/si";
+import { SiLine, SiGoogle, SiFacebook } from "react-icons/si";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 interface UserProfile {
-  provider: 'line' | 'google';
+  provider: 'line' | 'google' | 'facebook';
   userId: string;
   displayName: string;
-  email?: string; // Only for Google
+  email?: string; // For Google and Facebook
   statusMessage: string | null;
   pictureUrl: string;
   loginTime: string;
@@ -120,16 +120,20 @@ export default function Landing() {
             {/* Logo */}
             <div className="flex items-center space-x-3">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                profile.provider === 'line' ? 'bg-line-green' : 'bg-blue-600'
+                profile.provider === 'line' ? 'bg-line-green' : 
+                profile.provider === 'google' ? 'bg-blue-600' : 'bg-blue-700'
               }`}>
                 {profile.provider === 'line' ? (
                   <SiLine className="text-white text-lg" />
-                ) : (
+                ) : profile.provider === 'google' ? (
                   <SiGoogle className="text-white text-lg" />
+                ) : (
+                  <SiFacebook className="text-white text-lg" />
                 )}
               </div>
               <span className="text-xl font-bold text-slate-900">
-                {profile.provider === 'line' ? 'Line' : 'Google'} Demo
+                {profile.provider === 'line' ? 'Line' : 
+                 profile.provider === 'google' ? 'Google' : 'Facebook'} Demo
               </span>
             </div>
 
@@ -137,7 +141,8 @@ export default function Landing() {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
                 <Avatar className={`w-10 h-10 border-2 ${
-                  profile.provider === 'line' ? 'border-line-green' : 'border-blue-600'
+                  profile.provider === 'line' ? 'border-line-green' : 
+                  profile.provider === 'google' ? 'border-blue-600' : 'border-blue-700'
                 }`}>
                   <AvatarImage src={profile.pictureUrl} alt={profile.displayName} />
                   <AvatarFallback>{profile.displayName.charAt(0)}</AvatarFallback>
@@ -145,7 +150,7 @@ export default function Landing() {
                 <div className="hidden sm:block">
                   <p className="text-sm font-medium text-slate-900">{profile.displayName}</p>
                   <p className="text-xs text-slate-500">
-                    {profile.provider === 'google' && profile.email ? 
+                    {(profile.provider === 'google' || profile.provider === 'facebook') && profile.email ? 
                       profile.email : 
                       (profile.statusMessage || `${profile.provider} User`)
                     }
@@ -173,17 +178,21 @@ export default function Landing() {
         {/* Welcome Section */}
         <div className="text-center mb-12">
           <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${
-            profile.provider === 'line' ? 'bg-line-green-light' : 'bg-blue-100'
+            profile.provider === 'line' ? 'bg-line-green-light' : 
+            profile.provider === 'google' ? 'bg-blue-100' : 'bg-blue-50'
           }`}>
             <CheckCircle className={`text-3xl ${
-              profile.provider === 'line' ? 'text-line-green' : 'text-blue-600'
+              profile.provider === 'line' ? 'text-line-green' : 
+              profile.provider === 'google' ? 'text-blue-600' : 'text-blue-700'
             }`} />
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-4">
-            Welcome to {profile.provider === 'line' ? 'Line' : 'Google'} Demo!
+            Welcome to {profile.provider === 'line' ? 'Line' : 
+                       profile.provider === 'google' ? 'Google' : 'Facebook'} Demo!
           </h1>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            You have successfully authenticated with {profile.provider === 'line' ? 'Line' : 'Google'}. 
+            You have successfully authenticated with {profile.provider === 'line' ? 'Line' : 
+                                                    profile.provider === 'google' ? 'Google' : 'Facebook'}. 
             Here's your profile information and available features.
           </p>
         </div>
@@ -195,10 +204,12 @@ export default function Landing() {
             <CardContent className="p-6">
               <div className="flex items-center space-x-4 mb-4">
                 <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                  profile.provider === 'line' ? 'bg-line-green-light' : 'bg-blue-100'
+                  profile.provider === 'line' ? 'bg-line-green-light' : 
+                  profile.provider === 'google' ? 'bg-blue-100' : 'bg-blue-50'
                 }`}>
                   <User className={`text-xl ${
-                    profile.provider === 'line' ? 'text-line-green' : 'text-blue-600'
+                    profile.provider === 'line' ? 'text-line-green' : 
+                    profile.provider === 'google' ? 'text-blue-600' : 'text-blue-700'
                   }`} />
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900">Profile Information</h3>
@@ -212,7 +223,7 @@ export default function Landing() {
                   <span className="text-slate-500">User ID:</span>
                   <span className="font-medium text-slate-900 font-mono text-xs">{profile.userId}</span>
                 </div>
-                {profile.provider === 'google' && profile.email && (
+                {(profile.provider === 'google' || profile.provider === 'facebook') && profile.email && (
                   <div className="flex justify-between">
                     <span className="text-slate-500">Email:</span>
                     <span className="font-medium text-slate-900">{profile.email}</span>
@@ -223,11 +234,12 @@ export default function Landing() {
                     {profile.provider === 'line' ? 'Status:' : 'Provider:'}
                   </span>
                   <span className={`font-medium ${
-                    profile.provider === 'line' ? 'text-line-green' : 'text-blue-600'
+                    profile.provider === 'line' ? 'text-line-green' : 
+                    profile.provider === 'google' ? 'text-blue-600' : 'text-blue-700'
                   }`}>
                     {profile.provider === 'line' ? 
                       (profile.statusMessage || "Active User") : 
-                      'Google Account'
+                      profile.provider === 'google' ? 'Google Account' : 'Facebook Account'
                     }
                   </span>
                 </div>

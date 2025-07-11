@@ -1,4 +1,4 @@
-import { users, lineSessions, googleSessions, type User, type InsertUser, type LineSession, type InsertLineSession, type GoogleSession, type InsertGoogleSession } from "@shared/schema";
+import { users, lineSessions, googleSessions, facebookSessions, type User, type InsertUser, type LineSession, type InsertLineSession, type GoogleSession, type InsertGoogleSession, type FacebookSession, type InsertFacebookSession } from "@shared/schema";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -16,12 +16,19 @@ export interface IStorage {
   getGoogleSession(sessionId: string): Promise<GoogleSession | undefined>;
   deleteGoogleSession(sessionId: string): Promise<void>;
   getGoogleSessionByUserId(userId: string): Promise<GoogleSession | undefined>;
+  
+  // Facebook session methods
+  createFacebookSession(session: InsertFacebookSession): Promise<FacebookSession>;
+  getFacebookSession(sessionId: string): Promise<FacebookSession | undefined>;
+  deleteFacebookSession(sessionId: string): Promise<void>;
+  getFacebookSessionByUserId(userId: string): Promise<FacebookSession | undefined>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private lineSessions: Map<string, LineSession>;
   private googleSessions: Map<string, GoogleSession>;
+  private facebookSessions: Map<string, FacebookSession>;
   currentUserId: number;
   currentSessionId: number;
 
@@ -29,6 +36,7 @@ export class MemStorage implements IStorage {
     this.users = new Map();
     this.lineSessions = new Map();
     this.googleSessions = new Map();
+    this.facebookSessions = new Map();
     this.currentUserId = 1;
     this.currentSessionId = 1;
   }
@@ -114,6 +122,38 @@ export class MemStorage implements IStorage {
 
   async getGoogleSessionByUserId(userId: string): Promise<GoogleSession | undefined> {
     return Array.from(this.googleSessions.values()).find(
+      (session) => session.userId === userId && session.expiresAt > new Date(),
+    );
+  }
+
+  async createFacebookSession(insertSession: InsertFacebookSession): Promise<FacebookSession> {
+    const id = this.currentSessionId++;
+    const session: FacebookSession = { 
+      ...insertSession, 
+      id,
+      createdAt: new Date()
+    };
+    this.facebookSessions.set(insertSession.sessionId, session);
+    return session;
+  }
+
+  async getFacebookSession(sessionId: string): Promise<FacebookSession | undefined> {
+    const session = this.facebookSessions.get(sessionId);
+    if (session && session.expiresAt > new Date()) {
+      return session;
+    }
+    if (session) {
+      this.facebookSessions.delete(sessionId);
+    }
+    return undefined;
+  }
+
+  async deleteFacebookSession(sessionId: string): Promise<void> {
+    this.facebookSessions.delete(sessionId);
+  }
+
+  async getFacebookSessionByUserId(userId: string): Promise<FacebookSession | undefined> {
+    return Array.from(this.facebookSessions.values()).find(
       (session) => session.userId === userId && session.expiresAt > new Date(),
     );
   }
