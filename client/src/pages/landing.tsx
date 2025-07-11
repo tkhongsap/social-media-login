@@ -7,7 +7,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCircle, User, Clock, Settings, RefreshCw, LogOut } from "lucide-react";
-import { SiLine, SiGoogle, SiFacebook } from "react-icons/si";
+import { SiLine, SiFacebook } from "react-icons/si";
+import { GoogleIcon } from "@/components/GoogleIcon";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -78,7 +79,7 @@ export default function Landing() {
                 <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                   <div className="flex space-x-1">
                     <SiLine className="text-white text-xs" />
-                    <SiGoogle className="text-white text-xs" />
+                    <GoogleIcon size={12} />
                   </div>
                 </div>
                 <span className="text-xl font-bold text-slate-900">Social Login Demo</span>
@@ -126,7 +127,7 @@ export default function Landing() {
                 {profile.provider === 'line' ? (
                   <SiLine className="text-white text-lg" />
                 ) : profile.provider === 'google' ? (
-                  <SiGoogle className="text-white text-lg" />
+                  <GoogleIcon size={18} />
                 ) : (
                   <SiFacebook className="text-white text-lg" />
                 )}
@@ -142,7 +143,7 @@ export default function Landing() {
               <div className="flex items-center space-x-3">
                 <Avatar className={`w-10 h-10 border-2 ${
                   profile.provider === 'line' ? 'border-line-green' : 
-                  profile.provider === 'google' ? 'border-blue-600' : 'border-blue-700'
+                  profile.provider === 'google' ? 'border-google-blue' : 'border-facebook-blue'
                 }`}>
                   <AvatarImage src={profile.pictureUrl} alt={profile.displayName} />
                   <AvatarFallback>{profile.displayName.charAt(0)}</AvatarFallback>

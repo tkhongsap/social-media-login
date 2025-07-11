@@ -4,7 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, AlertCircle, ExternalLink } from "lucide-react";
-import { SiLine, SiGoogle, SiFacebook } from "react-icons/si";
+import { SiLine, SiFacebook } from "react-icons/si";
+import { GoogleIcon } from "@/components/GoogleIcon";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -165,7 +166,7 @@ export default function Login() {
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
               <div className="flex space-x-1">
                 <SiLine className="text-line-green text-sm" />
-                <SiGoogle className="text-blue-600 text-sm" />
+                <GoogleIcon size={14} />
                 <SiFacebook className="text-blue-700 text-sm" />
               </div>
             </div>
@@ -234,7 +235,7 @@ export default function Login() {
                 </div>
               ) : (
                 <div className="flex items-center justify-center space-x-3 group">
-                  <SiGoogle className="text-xl group-hover:scale-110 transition-transform duration-200" />
+                  <GoogleIcon size={20} className="group-hover:scale-110 transition-transform duration-200" />
                   <span>Continue with Google</span>
                   <svg className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
