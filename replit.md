@@ -10,7 +10,9 @@ This is a full-stack web application built with React (frontend) and Express.js 
 ✓ Added Facebook OAuth integration as the third authentication provider
 ✓ Created unified social media authentication system supporting Line, Google, and Facebook
 ✓ Updated UI to dynamically handle all three authentication providers
-✓ Development login working: http://166643c1-1c28-4b0e-8e38-36c0cdacea1b-00-xs4vzkk5ru23.picard.replit.dev
+✓ **Fixed Facebook OAuth permission issue**: Removed email scope to avoid app review requirement
+✓ **All three providers fully tested and working**: Line, Google, and Facebook authentication confirmed
+✓ Development login working: https://166643c1-1c28-4b0e-8e38-36c0cdacea1b-00-xs4vzkk5ru23.picard.replit.dev
 ✓ Production deployment: https://line-social-login-tkhongsap.replit.app (requires callback URL registration)
 
 # User Preferences
