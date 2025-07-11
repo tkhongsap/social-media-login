@@ -301,7 +301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const protocol = getProtocol(req);
     const baseUrl = getBaseUrl(req);
     const callbackUrl = `${protocol}://${baseUrl}/api/auth/facebook/callback`;
-    const scopes = 'email,public_profile';
+    const scopes = 'public_profile';
     const facebookAuthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${encodeURIComponent(callbackUrl)}&scope=${encodeURIComponent(scopes)}&state=${state}&response_type=code`;
     
     console.log('Generated Facebook auth URL:', facebookAuthUrl);
@@ -359,7 +359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const accessToken = tokenData.access_token;
 
       // Get user profile
-      const profileResponse = await fetch(`https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${accessToken}`);
+      const profileResponse = await fetch(`https://graph.facebook.com/me?fields=id,name,picture&access_token=${accessToken}`);
 
       if (!profileResponse.ok) {
         throw new Error("Failed to fetch user profile");
