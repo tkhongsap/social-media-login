@@ -113,16 +113,22 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/10 to-purple-600/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-indigo-400/10 to-cyan-600/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+      
       {/* Navigation Bar */}
-      <nav className="bg-white border-b border-slate-200 shadow-sm">
+      <nav className="relative z-10 backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-lg shadow-blue-500/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center space-x-3">
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                profile.provider === 'line' ? 'bg-line-green' : 
-                profile.provider === 'google' ? 'bg-google-blue' : 'bg-facebook-blue'
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg ${
+                profile.provider === 'line' ? 'bg-gradient-to-br from-[#00C300] to-[#00B300] shadow-[#00C300]/25' : 
+                profile.provider === 'google' ? 'bg-white border border-gray-200 shadow-gray-200/50' : 'bg-gradient-to-br from-[#1877F2] to-[#166FE5] shadow-[#1877F2]/25'
               }`}>
                 {profile.provider === 'line' ? (
                   <SiLine className="text-white text-lg" />
@@ -164,7 +170,7 @@ export default function Landing() {
                 variant="outline"
                 size="sm"
                 disabled={logoutMutation.isPending}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-700"
+                className="bg-white/80 hover:bg-white text-slate-700 border-slate-200 hover:border-slate-300 shadow-lg backdrop-blur-sm"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Logout
@@ -175,23 +181,20 @@ export default function Landing() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Welcome Section */}
         <div className="text-center mb-12">
-          <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${
-            profile.provider === 'line' ? 'bg-line-green-light' : 
-            profile.provider === 'google' ? 'bg-google-blue-light' : 'bg-facebook-blue-light'
+          <div className={`w-24 h-24 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl ${
+            profile.provider === 'line' ? 'bg-gradient-to-br from-[#00C300] to-[#00B300] shadow-[#00C300]/25' : 
+            profile.provider === 'google' ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue-500/25' : 'bg-gradient-to-br from-[#1877F2] to-[#166FE5] shadow-[#1877F2]/25'
           }`}>
-            <CheckCircle className={`text-3xl ${
-              profile.provider === 'line' ? 'text-line-green' : 
-              profile.provider === 'google' ? 'text-google-blue' : 'text-facebook-blue'
-            }`} />
+            <CheckCircle className="text-4xl text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
             Welcome to {profile.provider === 'line' ? 'Line' : 
                        profile.provider === 'google' ? 'Google' : 'Facebook'} Demo!
           </h1>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
             You have successfully authenticated with {profile.provider === 'line' ? 'Line' : 
                                                     profile.provider === 'google' ? 'Google' : 'Facebook'}. 
             Here's your profile information and available features.
@@ -201,7 +204,7 @@ export default function Landing() {
         {/* Profile Information Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {/* Profile Card */}
-          <Card className="hover:shadow-xl transition-shadow duration-200">
+          <Card className="backdrop-blur-xl bg-white/80 border border-white/20 shadow-xl shadow-blue-500/10 hover:shadow-2xl hover:shadow-blue-500/15 transition-all duration-300 hover:scale-[1.02] rounded-2xl">
             <CardContent className="p-6">
               <div className="flex items-center space-x-4 mb-4">
                 <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
@@ -249,7 +252,7 @@ export default function Landing() {
           </Card>
 
           {/* Session Info Card */}
-          <Card className="hover:shadow-xl transition-shadow duration-200">
+          <Card className="backdrop-blur-xl bg-white/80 border border-white/20 shadow-xl shadow-blue-500/10 hover:shadow-2xl hover:shadow-blue-500/15 transition-all duration-300 hover:scale-[1.02] rounded-2xl">
             <CardContent className="p-6">
               <div className="flex items-center space-x-4 mb-4">
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -277,7 +280,7 @@ export default function Landing() {
           </Card>
 
           {/* Channel Info Card */}
-          <Card className="hover:shadow-xl transition-shadow duration-200">
+          <Card className="backdrop-blur-xl bg-white/80 border border-white/20 shadow-xl shadow-blue-500/10 hover:shadow-2xl hover:shadow-blue-500/15 transition-all duration-300 hover:scale-[1.02] rounded-2xl">
             <CardContent className="p-6">
               <div className="flex items-center space-x-4 mb-4">
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">

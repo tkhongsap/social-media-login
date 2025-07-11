@@ -85,15 +85,27 @@ export default function Login() {
   const providers: AuthProvider[] = providersData?.providers || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <Card className="backdrop-blur-lg bg-white/80 dark:bg-gray-800/80 border-0 shadow-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 flex items-center justify-center p-4">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-indigo-400/20 to-cyan-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+      
+      <div className="w-full max-w-md relative z-10">
+        <Card className="backdrop-blur-xl bg-white/90 dark:bg-gray-800/90 border border-white/20 shadow-2xl shadow-blue-500/10 rounded-2xl">
           <CardContent className="p-8">
+            {/* Logo/Icon */}
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                  <div className="w-4 h-4 bg-gradient-to-br from-blue-600 to-purple-600 rounded-sm"></div>
+                </div>
+              </div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3">
                 Welcome Back
               </h1>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-slate-600 dark:text-gray-300 text-lg">
                 Choose your preferred login method
               </p>
             </div>
@@ -138,9 +150,9 @@ export default function Login() {
 
             {/* Dynamic provider buttons */}
             {!providersLoading && !providersError && (
-              <div className="space-y-0">
+              <div className="space-y-4">
                 {providers.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-slate-500">
                     No authentication providers are currently available.
                   </div>
                 ) : (
@@ -158,8 +170,8 @@ export default function Login() {
             )}
 
             <div className="mt-8 text-center">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                By continuing, you agree to our Terms of Service and Privacy Policy
+              <p className="text-sm text-slate-500 dark:text-gray-400">
+                By continuing, you agree to our <span className="text-blue-600 hover:underline cursor-pointer">Terms of Service</span> and <span className="text-blue-600 hover:underline cursor-pointer">Privacy Policy</span>
               </p>
             </div>
           </CardContent>
