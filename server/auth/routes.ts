@@ -54,13 +54,15 @@ export function registerAuthRoutes(app: Express) {
     const baseUrl = getBaseUrl(req);
     const fullBaseUrl = `${protocol}://${baseUrl}`;
     
-    const authUrl = authManager.generateAuthUrl(provider, fullBaseUrl);
+    const authUrl = authManager.generateAuthUrl(provider, fullBaseUrl, state);
     if (!authUrl) {
       return res.status(500).json({ error: `Failed to generate auth URL for ${provider}` });
     }
     
     console.log(`Generated ${provider} auth URL:`, authUrl);
     console.log('Using Base URL:', fullBaseUrl);
+    console.log('Generated state:', state);
+    console.log('Stored in session:', req.session.state);
     
     res.json({ authUrl });
   });
@@ -71,7 +73,9 @@ export function registerAuthRoutes(app: Express) {
     const { code, state, error, error_description } = req.query;
     
     console.log(`${provider} callback received:`, { code: !!code, state: !!state, error, error_description });
+    console.log('Received state:', state);
     console.log('Session state:', req.session.state);
+    console.log('States match:', state === req.session.state);
     
     if (error) {
       console.error(`${provider} OAuth error:`, error, error_description);

@@ -47,13 +47,12 @@ export class AuthManager {
     return this.providers.get(name);
   }
 
-  generateAuthUrl(providerName: string, baseUrl: string): string | null {
+  generateAuthUrl(providerName: string, baseUrl: string, state: string): string | null {
     const provider = this.providers.get(providerName);
     if (!provider) {
       return null;
     }
 
-    const state = crypto.randomBytes(32).toString('hex');
     return provider.generateAuthUrl(baseUrl, state);
   }
 
