@@ -35,6 +35,8 @@ npm start
 - **Backend**: Express.js + TypeScript + Drizzle ORM
 - **Database**: PostgreSQL (Neon in production)
 - **Authentication**: Passport.js with custom OAuth strategies
+- **State Management**: TanStack Query (React Query) for server state
+- **Routing**: Wouter for client-side routing
 
 ### Key Architectural Patterns
 
@@ -49,7 +51,7 @@ npm start
 3. **Database Schema**:
    - Separate session tables for each provider: `lineSessions`, `googleSessions`, `facebookSessions`
    - Type-safe with Drizzle ORM and Zod schemas
-   - Schema defined in `db/schema.ts`
+   - Schema defined in `/shared/schema.ts`
 
 4. **Frontend Routing**:
    - `/` - Login page with social auth options
@@ -74,16 +76,19 @@ FACEBOOK_APP_SECRET   # Facebook OAuth app secret
 
 ```
 /client               # React frontend
-  /src/pages         # Page components
+  /src/pages         # Page components (Login, Landing, NotFound)
   /src/components/ui # shadcn/ui components
-  /src/lib          # Utilities and hooks
+  /src/lib          # Utilities (queryClient, utils)
+  /src/hooks        # Custom React hooks
 /server              # Express backend
   index.ts          # Server entry point
   routes.ts         # OAuth endpoints and API routes
   db.ts             # Database connection
+  storage.ts        # Session storage configuration
+  vite.ts           # Vite middleware setup
 /shared             # Shared types and schemas
   schema.ts         # Drizzle ORM schema definitions
-/db                 # Database migrations and utilities
+/attached_assets    # Static assets and images
 ```
 
 ## Important Development Notes
@@ -96,17 +101,21 @@ FACEBOOK_APP_SECRET   # Facebook OAuth app secret
 
 4. **API Routes**: All OAuth endpoints are in `/server/routes.ts`. Follow existing patterns for error handling and response formats.
 
-5. **Database Changes**: After modifying schema in `/db/schema.ts`, run `npm run db:push` to update the database.
+5. **Database Changes**: After modifying schema in `/shared/schema.ts`, run `npm run db:push` to update the database.
 
 6. **Session Management**: Uses Express sessions with in-memory storage in development. Sessions track OAuth state across providers.
+
+7. **UI Framework**: shadcn/ui configured with "New York" style variant and custom theme. Components use class-variance-authority for styling variants.
+
+8. **Development Environment**: Configured for Replit deployment with Vite plugins for development (`@replit/vite-plugin-cartographer`, `@replit/vite-plugin-runtime-error-modal`).
 
 ## Common Tasks
 
 ### Adding a New OAuth Provider
 1. Add provider credentials to environment variables
-2. Create new session table in `/db/schema.ts`
+2. Create new session table in `/shared/schema.ts`
 3. Implement OAuth strategy in `/server/routes.ts`
-4. Add login button in `/client/src/pages/Login.tsx`
+4. Add login button in `/client/src/pages/login.tsx`
 5. Update types in `/shared/schema.ts`
 6. Run `npm run db:push` to update database
 
