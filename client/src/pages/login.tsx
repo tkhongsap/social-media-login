@@ -226,7 +226,7 @@ export default function Login() {
             <Button
               onClick={handleGoogleLogin}
               disabled={lineLoading || googleLoading || facebookLoading}
-              className="w-full bg-google-blue hover:bg-google-blue-dark text-white font-semibold py-4 px-6 h-auto rounded-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl mb-4"
+              className="w-full bg-white hover:bg-gray-50 text-gray-700 font-semibold py-4 px-6 h-auto rounded-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl mb-4 border border-gray-300 hover:border-gray-400"
             >
               {googleLoading ? (
                 <div className="flex items-center justify-center space-x-3">
