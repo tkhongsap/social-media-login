@@ -34,7 +34,7 @@ npm start
 - **Frontend**: React 18 + TypeScript + Vite + Tailwind CSS + shadcn/ui components
 - **Backend**: Express.js + TypeScript + Drizzle ORM
 - **Database**: PostgreSQL (Neon in production)
-- **Authentication**: Passport.js with custom OAuth strategies
+- **Authentication**: Custom OAuth implementation with `openid-client` library
 - **State Management**: TanStack Query (React Query) for server state
 - **Routing**: Wouter for client-side routing
 
@@ -48,10 +48,11 @@ npm start
    - Provider-specific session tables in database
    - State parameter validation for CSRF protection
 
-3. **Database Schema**:
-   - Separate session tables for each provider: `lineSessions`, `googleSessions`, `facebookSessions`
+3. **Modular Authentication System**:
+   - Provider-agnostic OAuth with abstract base class pattern
+   - Individual provider implementations in `/server/auth/providers/`
+   - Unified session storage with polymorphic schema
    - Type-safe with Drizzle ORM and Zod schemas
-   - Schema defined in `/shared/schema.ts`
 
 4. **Frontend Routing**:
    - `/` - Login page with social auth options
@@ -77,14 +78,18 @@ FACEBOOK_APP_SECRET   # Facebook OAuth app secret
 ```
 /client               # React frontend
   /src/pages         # Page components (Login, Landing, NotFound)
-  /src/components/ui # shadcn/ui components
+  /src/components    # React components including shadcn/ui
   /src/lib          # Utilities (queryClient, utils)
   /src/hooks        # Custom React hooks
 /server              # Express backend
+  /auth             # Modular authentication system
+    /providers      # OAuth provider implementations (line.ts, google.ts, facebook.ts)
+    manager.ts      # Authentication manager
+    routes.ts       # Authentication route handlers
+    types.ts        # Authentication type definitions
   index.ts          # Server entry point
-  routes.ts         # OAuth endpoints and API routes
-  db.ts             # Database connection
-  storage.ts        # Session storage configuration
+  routes.ts         # Main API route registration
+  storage.ts        # Session storage implementations
   vite.ts           # Vite middleware setup
 /shared             # Shared types and schemas
   schema.ts         # Drizzle ORM schema definitions
@@ -99,25 +104,43 @@ FACEBOOK_APP_SECRET   # Facebook OAuth app secret
 
 3. **Component Library**: Uses shadcn/ui components. When adding new components, they should be placed in `/client/src/components/ui`.
 
-4. **API Routes**: All OAuth endpoints are in `/server/routes.ts`. Follow existing patterns for error handling and response formats.
+4. **API Routes**: OAuth endpoints in `/server/auth/routes.ts`, main route registration in `/server/routes.ts`. Follow existing patterns for error handling and response formats.
 
 5. **Database Changes**: After modifying schema in `/shared/schema.ts`, run `npm run db:push` to update the database.
 
-6. **Session Management**: Uses Express sessions with in-memory storage in development. Sessions track OAuth state across providers.
+6. **Session Management**: Dual storage system - in-memory for development (`MemStorage`), database-ready interface for production. Uses `connect-pg-simple` and `memorystore` for session persistence.
 
 7. **UI Framework**: shadcn/ui configured with "New York" style variant and custom theme. Components use class-variance-authority for styling variants.
 
 8. **Development Environment**: Configured for Replit deployment with Vite plugins for development (`@replit/vite-plugin-cartographer`, `@replit/vite-plugin-runtime-error-modal`).
 
+## Development Workflow
+
+### Build Process
+- **Development**: `npm run dev` starts unified server with Vite middleware for hot reloading
+- **Production Build**: Dual build process using Vite (client) and esbuild (server)
+- **Type Checking**: Always run `npm run check` before committing (strict TypeScript)
+
+### Path Aliases
+- `@/*` → `./client/src/*` (client-side components)
+- `@shared/*` → `./shared/*` (shared types/schemas)
+- `@assets/*` → `./attached_assets/*` (static assets)
+
+### Configuration
+- **TypeScript**: Strict mode with incremental compilation
+- **Tailwind**: shadcn/ui "New York" variant with custom CSS variables
+- **Environment**: Replit-optimized with dynamic callback URL generation
+
 ## Common Tasks
 
 ### Adding a New OAuth Provider
 1. Add provider credentials to environment variables
-2. Create new session table in `/shared/schema.ts`
-3. Implement OAuth strategy in `/server/routes.ts`
-4. Add login button in `/client/src/pages/login.tsx`
-5. Update types in `/shared/schema.ts`
-6. Run `npm run db:push` to update database
+2. Create new provider class extending `BaseAuthProvider` in `/server/auth/providers/`
+3. Register provider in `/server/auth/manager.ts`
+4. Add authentication route in `/server/auth/routes.ts`
+5. Add login button in `/client/src/pages/login.tsx`
+6. Update shared types in `/shared/schema.ts` if needed
+7. Run `npm run db:push` to update database
 
 ### Modifying UI Components
 - UI components use Tailwind CSS and shadcn/ui
