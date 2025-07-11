@@ -225,7 +225,7 @@ export default function Login() {
             <Button
               onClick={handleGoogleLogin}
               disabled={lineLoading || googleLoading || facebookLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 h-auto rounded-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl mb-4"
+              className="w-full bg-google-blue hover:bg-google-blue-dark text-white font-semibold py-4 px-6 h-auto rounded-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl mb-4"
             >
               {googleLoading ? (
                 <div className="flex items-center justify-center space-x-3">
@@ -254,7 +254,7 @@ export default function Login() {
             <Button
               onClick={handleFacebookLogin}
               disabled={lineLoading || googleLoading || facebookLoading}
-              className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-4 px-6 h-auto rounded-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl mb-4"
+              className="w-full bg-facebook-blue hover:bg-facebook-blue-dark text-white font-semibold py-4 px-6 h-auto rounded-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl mb-4"
             >
               {facebookLoading ? (
                 <div className="flex items-center justify-center space-x-3">
@@ -308,7 +308,7 @@ export default function Login() {
                 href="https://accounts.google.com/signup"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline font-medium"
+                className="text-google-blue hover:underline font-medium"
               >
                 Create one here
               </a>
@@ -319,7 +319,7 @@ export default function Login() {
                 href="https://facebook.com/r.php"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-700 hover:underline font-medium"
+                className="text-facebook-blue hover:underline font-medium"
               >
                 Create one here
               </a>

@@ -28,6 +28,19 @@
   --line-green: hsl(120, 100%, 36%);
   --line-green-dark: hsl(120, 100%, 32%);
   --line-green-light: hsl(120, 43%, 91%);
+  
+  /* Google brand colors */
+  --google-blue: hsl(217, 89%, 61%);
+  --google-blue-dark: hsl(217, 89%, 55%);
+  --google-blue-light: hsl(217, 89%, 95%);
+  --google-red: hsl(10, 84%, 55%);
+  --google-yellow: hsl(46, 96%, 51%);
+  --google-green: hsl(143, 60%, 49%);
+  
+  /* Facebook brand colors */
+  --facebook-blue: hsl(221, 44%, 41%);
+  --facebook-blue-dark: hsl(221, 44%, 35%);
+  --facebook-blue-light: hsl(221, 44%, 90%);
 }
 
 .dark {
@@ -64,6 +77,7 @@
 }
 
 @layer utilities {
+  /* Line utilities */
   .bg-line-green {
     background-color: var(--line-green);
   }
@@ -98,5 +112,71 @@
   
   .hover\:bg-line-green-dark:hover {
     background-color: var(--line-green-dark);
+  }
+
+  /* Google utilities */
+  .bg-google-blue {
+    background-color: var(--google-blue);
+  }
+  
+  .bg-google-blue-dark {
+    background-color: var(--google-blue-dark);
+  }
+  
+  .bg-google-blue-light {
+    background-color: var(--google-blue-light);
+  }
+  
+  .text-google-blue {
+    color: var(--google-blue);
+  }
+  
+  .text-google-blue-dark {
+    color: var(--google-blue-dark);
+  }
+  
+  .border-google-blue {
+    border-color: var(--google-blue);
+  }
+  
+  .hover\:bg-google-blue:hover {
+    background-color: var(--google-blue);
+  }
+  
+  .hover\:bg-google-blue-dark:hover {
+    background-color: var(--google-blue-dark);
+  }
+
+  /* Facebook utilities */
+  .bg-facebook-blue {
+    background-color: var(--facebook-blue);
+  }
+  
+  .bg-facebook-blue-dark {
+    background-color: var(--facebook-blue-dark);
+  }
+  
+  .bg-facebook-blue-light {
+    background-color: var(--facebook-blue-light);
+  }
+  
+  .text-facebook-blue {
+    color: var(--facebook-blue);
+  }
+  
+  .text-facebook-blue-dark {
+    color: var(--facebook-blue-dark);
+  }
+  
+  .border-facebook-blue {
+    border-color: var(--facebook-blue);
+  }
+  
+  .hover\:bg-facebook-blue:hover {
+    background-color: var(--facebook-blue);
+  }
+  
+  .hover\:bg-facebook-blue-dark:hover {
+    background-color: var(--facebook-blue-dark);
   }
 }

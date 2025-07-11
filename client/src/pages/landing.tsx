@@ -121,7 +121,7 @@ export default function Landing() {
             <div className="flex items-center space-x-3">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                 profile.provider === 'line' ? 'bg-line-green' : 
-                profile.provider === 'google' ? 'bg-blue-600' : 'bg-blue-700'
+                profile.provider === 'google' ? 'bg-google-blue' : 'bg-facebook-blue'
               }`}>
                 {profile.provider === 'line' ? (
                   <SiLine className="text-white text-lg" />
@@ -179,11 +179,11 @@ export default function Landing() {
         <div className="text-center mb-12">
           <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${
             profile.provider === 'line' ? 'bg-line-green-light' : 
-            profile.provider === 'google' ? 'bg-blue-100' : 'bg-blue-50'
+            profile.provider === 'google' ? 'bg-google-blue-light' : 'bg-facebook-blue-light'
           }`}>
             <CheckCircle className={`text-3xl ${
               profile.provider === 'line' ? 'text-line-green' : 
-              profile.provider === 'google' ? 'text-blue-600' : 'text-blue-700'
+              profile.provider === 'google' ? 'text-google-blue' : 'text-facebook-blue'
             }`} />
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-4">
