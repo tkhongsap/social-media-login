@@ -39,6 +39,62 @@ export function registerAuthRoutes(app: Express) {
     res.json({ providers });
   });
 
+  // Get current user session
+  app.get("/api/auth/me", async (req, res) => {
+    const sessionId = req.session.authSessionId;
+    
+    if (!sessionId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    try {
+      const { storage } = await import("../storage");
+      const session = await storage.getAuthSession(sessionId);
+      
+      if (!session) {
+        return res.status(401).json({ error: "Session not found" });
+      }
+      
+      // Check if session is expired
+      if (session.expiresAt && new Date() > session.expiresAt) {
+        await storage.deleteAuthSession(sessionId);
+        req.session.authSessionId = undefined;
+        return res.status(401).json({ error: "Session expired" });
+      }
+      
+      // Return user profile data
+      res.json({
+        provider: session.provider,
+        userId: session.userId,
+        displayName: session.displayName,
+        email: session.email,
+        pictureUrl: session.pictureUrl,
+        loginTime: session.createdAt || new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error getting user session:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Logout endpoint
+  app.post("/api/auth/logout", async (req, res) => {
+    const sessionId = req.session.authSessionId;
+    
+    if (sessionId) {
+      try {
+        await storage.deleteAuthSession(sessionId);
+      } catch (error) {
+        console.error("Error deleting session:", error);
+      }
+    }
+    
+    req.session.authSessionId = undefined;
+    req.session.state = undefined;
+    
+    res.json({ success: true });
+  });
+
   // Generic authentication endpoint for any provider
   app.get("/api/auth/:provider", (req, res) => {
     const { provider } = req.params;
