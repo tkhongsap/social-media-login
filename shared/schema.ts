@@ -8,39 +8,18 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
 });
 
-export const lineSessions = pgTable("line_sessions", {
+// Unified authentication sessions table for all providers
+export const authSessions = pgTable("auth_sessions", {
   id: serial("id").primaryKey(),
-  userId: text("user_id").notNull(),
+  provider: text("provider").notNull(), // 'line', 'google', 'facebook', etc.
+  userId: text("user_id").notNull(), // Provider-specific user ID
   displayName: text("display_name").notNull(),
-  statusMessage: text("status_message"),
+  email: text("email"), // Optional, not all providers provide email
   pictureUrl: text("picture_url"),
   accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token"), // Optional, not all providers provide refresh tokens
   sessionId: text("session_id").notNull().unique(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-});
-
-export const googleSessions = pgTable("google_sessions", {
-  id: serial("id").primaryKey(),
-  userId: text("user_id").notNull(),
-  email: text("email").notNull(),
-  name: text("name").notNull(),
-  pictureUrl: text("picture_url"),
-  accessToken: text("access_token").notNull(),
-  refreshToken: text("refresh_token"),
-  sessionId: text("session_id").notNull().unique(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-});
-
-export const facebookSessions = pgTable("facebook_sessions", {
-  id: serial("id").primaryKey(),
-  userId: text("user_id").notNull(),
-  email: text("email"),
-  name: text("name").notNull(),
-  pictureUrl: text("picture_url"),
-  accessToken: text("access_token").notNull(),
-  sessionId: text("session_id").notNull().unique(),
+  metadata: text("metadata"), // JSON string for provider-specific data
   createdAt: timestamp("created_at").defaultNow().notNull(),
   expiresAt: timestamp("expires_at").notNull(),
 });
@@ -50,26 +29,12 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
 });
 
-export const insertLineSessionSchema = createInsertSchema(lineSessions).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertGoogleSessionSchema = createInsertSchema(googleSessions).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertFacebookSessionSchema = createInsertSchema(facebookSessions).omit({
+export const insertAuthSessionSchema = createInsertSchema(authSessions).omit({
   id: true,
   createdAt: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
-export type LineSession = typeof lineSessions.$inferSelect;
-export type InsertLineSession = z.infer<typeof insertLineSessionSchema>;
-export type GoogleSession = typeof googleSessions.$inferSelect;
-export type InsertGoogleSession = z.infer<typeof insertGoogleSessionSchema>;
-export type FacebookSession = typeof facebookSessions.$inferSelect;
-export type InsertFacebookSession = z.infer<typeof insertFacebookSessionSchema>;
+export type AuthSession = typeof authSessions.$inferSelect;
+export type InsertAuthSession = z.infer<typeof insertAuthSessionSchema>;
